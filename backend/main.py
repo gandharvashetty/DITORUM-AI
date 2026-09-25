@@ -673,7 +673,7 @@ if OLLAMA_API_KEY:
         },
     )
 
-    CHAT_MODEL = "qwen3:8b-cloud"
+    CHAT_MODEL = "gpt-oss:20b-cloud"
     VISION_MODEL = "qwen3-vl:235b-cloud"
     CODING_MODEL = "qwen3-coder:480b-cloud"
 
