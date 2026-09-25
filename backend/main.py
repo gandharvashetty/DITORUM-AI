@@ -379,11 +379,8 @@ async def run_code(data: dict):
 
 
 def _ollama_text(prompt, model=None, num_predict=700):
-    """Generate text with Ollama.
+    """Generate text using the configured Ollama client."""
 
-    The default model remains the normal DITORUM chat model.
-    Coding Lab can pass CODING_MODEL so it uses the smaller/faster model.
-    """
     try:
         selected_model = model or CHAT_MODEL
 
@@ -396,6 +393,19 @@ def _ollama_text(prompt, model=None, num_predict=700):
                 "num_predict": num_predict,
             },
         )
+
+        if isinstance(response, dict):
+            return response.get("response", "").strip()
+
+        return getattr(response, "response", "").strip()
+
+    except Exception as exc:
+        print("Coding AI error:", repr(exc))
+
+        raise HTTPException(
+            status_code=500,
+            detail="The coding AI could not generate an explanation.",
+        ) from exc
 
         if isinstance(response, dict):
             return response.get("response", "").strip()
