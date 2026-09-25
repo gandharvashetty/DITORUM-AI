@@ -2698,19 +2698,16 @@ export default function App() {
                         setIsTranslationReading(true);
 
                         // Send translated text to FastAPI
-                        const response = await fetch(
-                          "http://127.0.0.1:8000/text-to-speech",
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                              text: translatedText,
-                              language: translatorTo,
-                            }),
+                        const response = await fetch(`${API}/text-to-speech`, {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
                           },
-                        );
+                          body: JSON.stringify({
+                            text: translatedText,
+                            language: translatorTo,
+                          }),
+                        });
 
                         if (!response.ok) {
                           throw new Error("Text-to-speech failed");

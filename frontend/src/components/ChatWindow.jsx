@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "../styles/chat.css";
 
-const API = "http://127.0.0.1:8000";
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 function ChatWindow({ conversationId }) {
   const [messages, setMessages] = useState([]);
@@ -53,14 +53,10 @@ function ChatWindow({ conversationId }) {
                 )}
 
                 {msg.file && (
-                  <div className="attachment-chip">
-                    📎 {msg.file}
-                  </div>
+                  <div className="attachment-chip">📎 {msg.file}</div>
                 )}
 
-                <div className="message-text">
-                  {msg.text}
-                </div>
+                <div className="message-text">{msg.text}</div>
               </div>
             </div>
           ))}
