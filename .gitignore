@@ -1,0 +1,37 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Backend
+backend/__pycache__/
+backend/.venv/
+backend/venv/
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Python
+*.pyo
+*.pyd
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads
+uploads/
+
+# Build/cache
+dist/
+.vite/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+backend/translation_audio.mp3

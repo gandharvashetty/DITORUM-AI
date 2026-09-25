@@ -1,0 +1,33 @@
+.composer {
+  padding: 18px;
+  border-top: 1px solid #1f2937;
+  display: flex;
+  gap: 12px;
+  background: #0b1020;
+}
+
+.composer input {
+  flex: 1;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid #374151;
+  background: #111827;
+  color: white;
+}
+
+.composer .plus,
+.composer .send {
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .composer {
+    position: sticky;
+    bottom: 0;
+  }
+}

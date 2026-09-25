@@ -1,0 +1,185 @@
+.sidebar {
+  width: 320px;
+  height: 100vh;
+  background: #111827;
+  border-right: 1px solid #1f2937;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden; /* only one scroll area inside */
+}
+
+/* This is the ChatGPT-style single scroll container */
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Header */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #2563eb;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: bold;
+}
+
+.sidebar h2 {
+  font-size: 18px;
+  color: white;
+}
+
+.sidebar p {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+/* New Chat button */
+.new-chat {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #374151;
+  background: #1f2937;
+  color: white;
+  cursor: pointer;
+}
+
+.new-chat:hover {
+  background: #2a3648;
+}
+
+/* Search */
+.sidebar-search {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #374151;
+  background: #0b1220;
+  color: white;
+}
+
+.sidebar-search::placeholder {
+  color: #94a3b8;
+}
+
+/* Section title */
+.history-section {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-top: 8px;
+}
+
+/* History list */
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #e5e7eb;
+}
+
+.history-item:hover,
+.history-item.active {
+  background: #1f2937;
+}
+
+.history-title {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Three dots */
+.history-more {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.history-more:hover {
+  background: #374151;
+  color: white;
+}
+
+/* Floating menu */
+.conversation-menu {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 8px);
+
+  width: 180px;
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  padding: 8px;
+
+  z-index: 99999;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.conversation-menu button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #e5e7eb;
+  padding: 10px 12px;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.conversation-menu button:hover {
+  background: #1f2937;
+}
+
+.conversation-menu .danger {
+  color: #f87171;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
