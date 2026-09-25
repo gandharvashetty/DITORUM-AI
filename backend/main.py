@@ -57,53 +57,74 @@ def _get_runtime(language, version):
     Returns:
       (compile_command, run_command, source_filename)
 
-    Version names are supported by the API. The selected version must
-    also be installed/configured on the computer running this backend.
+    Accepts common language names from the frontend and normalizes them
+    before selecting the runtime/compiler.
     """
-    language = str(language or "").lower().strip()
 
-# Normalize language names coming from the frontend
-    normalized_language = re.sub(r"[\s._-]+", "", language)
+    raw_language = str(language or "").strip().lower()
+    normalized_language = re.sub(r"[\s._-]+", "", raw_language)
 
+    # Normalize frontend language names.
     if normalized_language.startswith("python"):
-         language = "python"
-    elif normalized_language in ("c",):
+        language = "python"
+    elif normalized_language == "c":
         language = "c"
     elif normalized_language in ("cpp", "c++"):
         language = "cpp"
-    elif normalized_language.startswith("java"):
-        language = "java"
-    elif normalized_language.startswith("javascript"):
+    elif normalized_language in ("javascript", "js", "node", "nodejs"):
         language = "javascript"
+    elif normalized_language in ("java", "jdk"):
+        language = "java"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unsupported language. Supported languages: "
+                "Python, C, C++, Java and JavaScript."
+            ),
+        )
 
-    version_key = _coding_version_key(sys.version)
+    version_key = _coding_version_key(version)
     is_windows = os.name == "nt"
 
+    # =========================
+    # PYTHON
+    # =========================
     if language == "python":
-        # Windows Python Launcher:
-        #   py -3.13 file.py
-        # Other OS:
-        #   python3.13 file.py
-        digits = version_key.replace("python", "").replace(".", "")
-        if len(digits) >= 2:
-            py_version = f"{digits[0]}.{digits[1:]}"
-        else:
-            py_version = version_key.replace("python", "")
-
         if is_windows:
+            # Windows Python Launcher:
+            # py -3.12 main.py
+            digits = re.sub(r"[^0-9]", "", version_key)
+
+            if len(digits) >= 2:
+                py_version = f"{digits[0]}.{digits[1:]}"
+            else:
+                py_version = version_key.replace("python", "")
+
+            # If no valid version was supplied, use the current backend
+            # interpreter instead of producing a broken command.
+            if not py_version or "." not in py_version:
+                return None, [sys.executable, "{source}"], "main.py"
+
             return None, ["py", f"-{py_version}", "{source}"], "main.py"
 
-            return None, [sys.executable, "{source}"], "main.py"
+        # Render/Linux: use the exact interpreter running FastAPI.
+        # This avoids requiring python3.12/python3.13 to be installed separately.
+        return None, [sys.executable, "{source}"], "main.py"
 
+    # =========================
+    # C
+    # =========================
     if language == "c":
-        # Configure C compiler versions through environment variables when
-        # multiple GCC installations exist. Example:
-        # DITORUM_GCC_14=gcc-14
         gcc_number = re.search(r"(\d+)", version_key)
         number = gcc_number.group(1) if gcc_number else "14"
-        compiler = os.environ.get(f"DITORUM_GCC_{number}", f"gcc-{number}")
+
+        compiler = os.environ.get(
+            f"DITORUM_GCC_{number}",
+            f"gcc-{number}",
+        )
+
         if is_windows and compiler == f"gcc-{number}":
-            # MinGW installations commonly expose gcc.exe instead.
             compiler = os.environ.get("DITORUM_GCC", "gcc")
 
         return (
@@ -112,10 +133,18 @@ def _get_runtime(language, version):
             "main.c",
         )
 
+    # =========================
+    # C++
+    # =========================
     if language == "cpp":
         gcc_number = re.search(r"(\d+)", version_key)
         number = gcc_number.group(1) if gcc_number else "14"
-        compiler = os.environ.get(f"DITORUM_GXX_{number}", f"g++-{number}")
+
+        compiler = os.environ.get(
+            f"DITORUM_GXX_{number}",
+            f"g++-{number}",
+        )
+
         if is_windows and compiler == f"g++-{number}":
             compiler = os.environ.get("DITORUM_GXX", "g++")
 
@@ -125,11 +154,17 @@ def _get_runtime(language, version):
             "main.cpp",
         )
 
+    # =========================
+    # JAVA
+    # =========================
     if language == "java":
         jdk_number = re.search(r"(\d+)", version_key)
         number = jdk_number.group(1) if jdk_number else "21"
 
-        java_home = os.environ.get(f"DITORUM_JAVA_{number}") or os.environ.get("JAVA_HOME")
+        java_home = (
+            os.environ.get(f"DITORUM_JAVA_{number}")
+            or os.environ.get("JAVA_HOME")
+        )
 
         if java_home:
             java_exe = os.path.join(
@@ -152,6 +187,9 @@ def _get_runtime(language, version):
             "Main.java",
         )
 
+    # =========================
+    # JAVASCRIPT
+    # =========================
     if language == "javascript":
         node_number = re.search(r"(\d+)", version_key)
         number = node_number.group(1) if node_number else "22"
@@ -163,9 +201,13 @@ def _get_runtime(language, version):
 
         return None, [node_exe, "{source}"], "main.js"
 
+    # Defensive fallback.
     raise HTTPException(
         status_code=400,
-        detail="Unsupported language. Supported languages: Python, C, C++, Java and JavaScript.",
+        detail=(
+            "Unsupported language. Supported languages: "
+            "Python, C, C++, Java and JavaScript."
+        ),
     )
 
 
@@ -321,6 +363,12 @@ async def run_code(data: dict):
     version = data.get("version", "3.13")
     code = data.get("code", "")
     user_input = data.get("input", "")
+
+    if language is None or not str(language).strip():
+        language = "python"
+
+    if version is None or not str(version).strip():
+        version = "3.13"
 
     return _run_program(
         language,
@@ -1299,8 +1347,6 @@ def should_search_web(question):
     # RTX 5090
     # R15 V4
     # Galaxy S25
-
-    import re
 
     has_model_number = bool(
         re.search(
