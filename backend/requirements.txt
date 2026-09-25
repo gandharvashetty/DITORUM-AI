@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+gTTS
+ollama
+PyMuPDF
+python-multipart
