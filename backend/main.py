@@ -78,7 +78,7 @@ def _get_runtime(language, version):
         if is_windows:
             return None, ["py", f"-{py_version}", "{source}"], "main.py"
 
-        return None, [f"python{py_version}", "{source}"], "main.py"
+            return None, [sys.executable, "{source}"], "main.py"
 
     if language == "c":
         # Configure C compiler versions through environment variables when
