@@ -380,8 +380,7 @@ async def run_code(data: dict):
 
 def _ollama_text(prompt, model=None, num_predict=700):
     """
-    Generate coding explanations using the same Ollama Cloud client
-    that is already working for normal DITORUM AI chat.
+    Generate Coding AI responses using the Ollama Cloud client.
     """
 
     selected_model = model or CODING_MODEL
@@ -390,7 +389,6 @@ def _ollama_text(prompt, model=None, num_predict=700):
         print("========================================")
         print("CODING AI REQUEST")
         print("Model:", selected_model)
-        print("Prompt length:", len(prompt))
         print("========================================")
 
         response = ollama_client.chat(
@@ -401,42 +399,41 @@ def _ollama_text(prompt, model=None, num_predict=700):
                     "content": prompt,
                 }
             ],
-            think=False,
             options={
                 "temperature": 0.2,
                 "num_predict": num_predict,
             },
         )
 
-        # Ollama dictionary response
+        # Handle dictionary response
         if isinstance(response, dict):
+
             message = response.get("message", {})
 
             if isinstance(message, dict):
-                result = message.get("content", "")
+                content = message.get("content", "")
 
-                if result:
-                    return result.strip()
+                if content:
+                    return content.strip()
 
-            # Fallback for generate-style response
-            result = response.get("response", "")
+            content = response.get("response", "")
 
-            if result:
-                return result.strip()
+            if content:
+                return content.strip()
 
-        # Ollama response object
+        # Handle Ollama object response
         message = getattr(response, "message", None)
 
         if message:
-            result = getattr(message, "content", "")
+            content = getattr(message, "content", "")
 
-            if result:
-                return result.strip()
+            if content:
+                return content.strip()
 
-        result = getattr(response, "response", "")
+        content = getattr(response, "response", "")
 
-        if result:
-            return result.strip()
+        if content:
+            return content.strip()
 
         raise RuntimeError("Ollama returned an empty response.")
 
@@ -448,13 +445,11 @@ def _ollama_text(prompt, model=None, num_predict=700):
         print(str(exc))
         print("========================================")
 
-        # Fallback to the normal working Chat model.
-        # This means Explain/Debug can still work even if
-        # the dedicated coding model is temporarily unavailable.
-
+        # Fallback to the normal working Chat model
         if selected_model != CHAT_MODEL:
 
             try:
+
                 print("Trying fallback model:", CHAT_MODEL)
 
                 response = ollama_client.chat(
@@ -465,7 +460,6 @@ def _ollama_text(prompt, model=None, num_predict=700):
                             "content": prompt,
                         }
                     ],
-                    think=False,
                     options={
                         "temperature": 0.2,
                         "num_predict": num_predict,
@@ -477,18 +471,23 @@ def _ollama_text(prompt, model=None, num_predict=700):
                     message = response.get("message", {})
 
                     if isinstance(message, dict):
-                        result = message.get("content", "")
+                        content = message.get("content", "")
 
-                        if result:
-                            return result.strip()
+                        if content:
+                            return content.strip()
 
                 message = getattr(response, "message", None)
 
                 if message:
-                    result = getattr(message, "content", "")
 
-                    if result:
-                        return result.strip()
+                    content = getattr(
+                        message,
+                        "content",
+                        ""
+                    )
+
+                    if content:
+                        return content.strip()
 
             except Exception as fallback_exc:
 
