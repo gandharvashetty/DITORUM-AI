@@ -324,7 +324,7 @@ def _ollama_text(prompt, model=None, num_predict=700):
     try:
         selected_model = model or CHAT_MODEL
 
-        response = ollama.generate(
+        response = ollama_client.generate(
             model=selected_model,
             prompt=prompt,
             think=False,
@@ -641,9 +641,10 @@ init_db()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-    ],
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "*",
+],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -662,9 +663,26 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # MODELS
 # ======================================================
 
-CHAT_MODEL = "qwen3:8b"
-VISION_MODEL = "qwen2.5vl:7b"
-CODING_MODEL = "llama3.2"
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY")
+
+if OLLAMA_API_KEY:
+    ollama_client = ollama.Client(
+        host="https://ollama.com",
+        headers={
+            "Authorization": f"Bearer {OLLAMA_API_KEY}"
+        },
+    )
+
+    CHAT_MODEL = "qwen3:8b-cloud"
+    VISION_MODEL = "qwen3-vl:235b-cloud"
+    CODING_MODEL = "qwen3-coder:480b-cloud"
+
+else:
+    ollama_client = ollama.Client()
+
+    CHAT_MODEL = "qwen3:8b"
+    VISION_MODEL = "qwen2.5vl:7b"
+    CODING_MODEL = "llama3.2"
 
 
 # ======================================================
@@ -817,7 +835,7 @@ def generate_conversation_title(
 
     try:
 
-        response = ollama.generate(
+        response = ollama_client.generate(
             model=CHAT_MODEL,
             prompt=prompt,
             think=False,
@@ -932,7 +950,7 @@ def search_web(query):
             query
         )
 
-        results = ollama.web_search(
+        results = ollama_client.web_search(
             query
         )
 
@@ -1540,7 +1558,7 @@ IMPORTANT:
 
         try:
 
-            stream = ollama.chat(
+            stream = ollama_client.chat(
                 model=CHAT_MODEL,
                 messages=ollama_messages,
                 stream=True,
@@ -1777,7 +1795,7 @@ supported by the PDF.
             }
         )
 
-        stream = ollama.chat(
+        stream = ollama_client.chat(
             model=CHAT_MODEL,
             messages=ollama_messages,
             stream=True,
@@ -1832,7 +1850,7 @@ supported by the PDF.
             },
         ]
 
-        stream = ollama.chat(
+        stream = ollama_client.chat(
             model=VISION_MODEL,
             messages=image_messages,
             stream=True,
