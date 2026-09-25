@@ -61,7 +61,22 @@ def _get_runtime(language, version):
     also be installed/configured on the computer running this backend.
     """
     language = str(language or "").lower().strip()
-    version_key = _coding_version_key(version)
+
+# Normalize language names coming from the frontend
+    normalized_language = re.sub(r"[\s._-]+", "", language)
+
+    if normalized_language.startswith("python"):
+         language = "python"
+    elif normalized_language in ("c",):
+        language = "c"
+    elif normalized_language in ("cpp", "c++"):
+        language = "cpp"
+    elif normalized_language.startswith("java"):
+        language = "java"
+    elif normalized_language.startswith("javascript"):
+        language = "javascript"
+
+    version_key = _coding_version_key(sys.version)
     is_windows = os.name == "nt"
 
     if language == "python":
