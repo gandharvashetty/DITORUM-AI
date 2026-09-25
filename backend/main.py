@@ -379,14 +379,28 @@ async def run_code(data: dict):
 
 
 def _ollama_text(prompt, model=None, num_predict=700):
-    """Generate text using the configured Ollama client."""
+    """
+    Generate coding explanations using the same Ollama Cloud client
+    that is already working for normal DITORUM AI chat.
+    """
+
+    selected_model = model or CODING_MODEL
 
     try:
-        selected_model = model or CHAT_MODEL
+        print("========================================")
+        print("CODING AI REQUEST")
+        print("Model:", selected_model)
+        print("Prompt length:", len(prompt))
+        print("========================================")
 
-        response = ollama_client.generate(
+        response = ollama_client.chat(
             model=selected_model,
-            prompt=prompt,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
             think=False,
             options={
                 "temperature": 0.2,
@@ -394,29 +408,102 @@ def _ollama_text(prompt, model=None, num_predict=700):
             },
         )
 
+        # Ollama dictionary response
         if isinstance(response, dict):
-            return response.get("response", "").strip()
+            message = response.get("message", {})
 
-        return getattr(response, "response", "").strip()
+            if isinstance(message, dict):
+                result = message.get("content", "")
+
+                if result:
+                    return result.strip()
+
+            # Fallback for generate-style response
+            result = response.get("response", "")
+
+            if result:
+                return result.strip()
+
+        # Ollama response object
+        message = getattr(response, "message", None)
+
+        if message:
+            result = getattr(message, "content", "")
+
+            if result:
+                return result.strip()
+
+        result = getattr(response, "response", "")
+
+        if result:
+            return result.strip()
+
+        raise RuntimeError("Ollama returned an empty response.")
 
     except Exception as exc:
-        print("Coding AI error:", repr(exc))
+
+        print("========================================")
+        print("CODING AI ERROR")
+        print(type(exc).__name__)
+        print(str(exc))
+        print("========================================")
+
+        # Fallback to the normal working Chat model.
+        # This means Explain/Debug can still work even if
+        # the dedicated coding model is temporarily unavailable.
+
+        if selected_model != CHAT_MODEL:
+
+            try:
+                print("Trying fallback model:", CHAT_MODEL)
+
+                response = ollama_client.chat(
+                    model=CHAT_MODEL,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt,
+                        }
+                    ],
+                    think=False,
+                    options={
+                        "temperature": 0.2,
+                        "num_predict": num_predict,
+                    },
+                )
+
+                if isinstance(response, dict):
+
+                    message = response.get("message", {})
+
+                    if isinstance(message, dict):
+                        result = message.get("content", "")
+
+                        if result:
+                            return result.strip()
+
+                message = getattr(response, "message", None)
+
+                if message:
+                    result = getattr(message, "content", "")
+
+                    if result:
+                        return result.strip()
+
+            except Exception as fallback_exc:
+
+                print("========================================")
+                print("CODING AI FALLBACK ERROR")
+                print(type(fallback_exc).__name__)
+                print(str(fallback_exc))
+                print("========================================")
 
         raise HTTPException(
             status_code=500,
-            detail="The coding AI could not generate an explanation.",
-        ) from exc
-
-        if isinstance(response, dict):
-            return response.get("response", "").strip()
-
-        return getattr(response, "response", "").strip()
-
-    except Exception as exc:
-        print("Coding AI error:", exc)
-        raise HTTPException(
-            status_code=500,
-            detail="The coding AI could not generate an explanation.",
+            detail=(
+                "Coding AI failed: "
+                f"{type(exc).__name__}: {str(exc)}"
+            ),
         ) from exc
 
 
